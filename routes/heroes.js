@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const heroesList = require("../heroes.json");
-const { verifyHero } = require("../middlewares/heroes-mw");
+const { verifyExistingHero, verifyNonExistingHero, validateHero } = require("../middlewares/heroes-mw");
 
 // HEROES ///////////////////////////
 
@@ -11,19 +11,22 @@ app.get("/", (req, res) => {
 });
 
 // get one hero with slug
-app.get("/:slug", verifyHero, (req, res) => {
+app.get("/:slug", verifyExistingHero, (req, res) => {
   const hero = heroesList.find((hero) => hero.slug === req.params.slug);
 
   res.json(hero);
 });
 
 // create new hero
-app.post("/", verifyHero, (req, res) => {
+app.post("/", verifyNonExistingHero, validateHero, (req, res) => {
     const newHero = {
       name: req.body.name,
       slug: req.body.slug,
       power: req.body.power,
       age: req.body.age,
+      color: req.body.color,
+      isAlive: req.body.isAlive,
+      image: req.body.image,
     };
   
     heroesList.push(newHero);
@@ -31,7 +34,7 @@ app.post("/", verifyHero, (req, res) => {
   });
 
 // delete one hero with slug
-app.delete("/:slug", verifyHero, (req, res) => {
+app.delete("/:slug", verifyExistingHero, (req, res) => {
     const hero = heroesList.find((hero) => hero.slug === req.params.slug);
     const index = heroesList.indexOf(hero);
     heroesList.splice(index, 1);
@@ -39,31 +42,31 @@ app.delete("/:slug", verifyHero, (req, res) => {
 });
 
 // modify one hero with slug
-app.put("/:slug", verifyHero, (req, res) => {
-    const hero = heroesList.find((hero) => hero.slug === req.params.slug);
-    const index = heroesList.indexOf(hero);
-    heroeEdit = req.body;
-    hero.(heroeEdit);
+app.put("/:slug", verifyExistingHero, validateHero, (req, res) => {
+    let hero = heroesList.findIndex((hero) => hero.slug === req.params.slug);
+    const heroeEdit = req.body;
+    heroesList[hero] = heroeEdit;
+    res.json(heroeEdit)
 });
 
 // POWERS ///////////////////////////
 
 // get powers of one hero with slug
-app.get("/:slug/powers", verifyHero, (req, res) => {
+app.get("/:slug/powers", verifyExistingHero, (req, res) => {
   const hero = heroesList.find((hero) => hero.slug === req.params.slug);
 
   res.json(hero.power);
 });
 
 // add new power to hero with slug
-app.post("/:slug/powers", verifyHero, (req, res) => {
+app.post("/:slug/powers", verifyExistingHero, (req, res) => {
   const newPower = `${req.body.name}`;
   hero.power.push(newPower);
   res.json(hero);
 });
 
 // delete one power of hero with slug
-app.delete("/:slug/powers/:power", verifyHero, (req, res) => {
+app.delete("/:slug/powers/:power", verifyExistingHero, (req, res) => {
     const hero = heroesList.find((hero) => hero.slug === req.params.slug);
     const index = hero.power.indexOf(req.params.power);
     hero.power.splice(index, 1);
